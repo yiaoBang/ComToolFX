@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+    id("application")
+    id("org.openjfx.javafxplugin") version "0.1.0"
+    id("org.beryx.jlink") version "3.0.1"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+group = 'com.y'
+version = '1.0.0'
+
+
+repositories {
+    mavenCentral()
+}
+javafx {
+    version = "21.0.2"
+    modules = ["javafx.controls", "javafx.fxml"]
+}
+dependencies {
+
+    // implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.fazecast:jSerialComm:2.10.4'
+    implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

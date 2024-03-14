@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<?import java.lang.String?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="525.0" prefWidth="756.0" stylesheets="@../css/home.css"
+            xmlns="http://javafx.com/javafx/21.0.1" fx:controller="com.y.comtoolfx.controller.Home">
+    <children>
+        <HBox layoutX="513.0" layoutY="21.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="串口号"/>
+                <ComboBox fx:id="serialPortNamePicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <HBox layoutX="513.0" layoutY="66.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="波特率"/>
+                <ComboBox fx:id="baudRatePicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <HBox layoutX="513.0" layoutY="111.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="数据位"/>
+                <ComboBox fx:id="dataBitsPicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <HBox layoutX="513.0" layoutY="156.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="停止位"/>
+                <ComboBox fx:id="stopBitsPicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <HBox layoutX="513.0" layoutY="203.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="校验"/>
+                <ComboBox fx:id="parityPicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <HBox layoutX="513.0" layoutY="247.0">
+            <children>
+                <Label prefHeight="29.0" prefWidth="50.0" text="流控"/>
+                <ComboBox fx:id="flowControlPicker" prefHeight="35.0" prefWidth="167.0"/>
+            </children>
+        </HBox>
+        <TextArea fx:id="sendMessage" layoutX="14.0" layoutY="363.0" prefHeight="78.0" prefWidth="489.0"
+                  wrapText="true"/>
+        <TextArea fx:id="receiveMessage" layoutX="14.0" layoutY="11.0" prefHeight="325.0" prefWidth="489.0"
+                  wrapText="true"/>
+        <Pane layoutX="537.0" layoutY="300.0" prefHeight="141.0" prefWidth="197.0">
+            <children>
+                <Button fx:id="openSerialPort" layoutY="1.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="87.0"
+                        text="打开串口"/>
+                <Button layoutX="112.0" mnemonicParsing="false" onAction="#cleanReceive" prefHeight="35.0"
+                        prefWidth="87.0" text="清除接收"/>
+                <Button layoutY="103.0" mnemonicParsing="false" onAction="#sendData" prefHeight="35.0" prefWidth="87.0"
+                        text="发送数据"/>
+                <Button layoutX="112.0" layoutY="103.0" mnemonicParsing="false" onAction="#cleanSend" prefHeight="35.0"
+                        prefWidth="87.0" text="清除发送"/>
+                <CheckBox fx:id="receiveShow" layoutY="62.0" mnemonicParsing="false" prefHeight="29.0" prefWidth="87.0"
+                          text="接收显示"/>
+                <CheckBox fx:id="showTime" layoutX="112.0" layoutY="62.0" mnemonicParsing="false" prefHeight="29.0"
+                          prefWidth="87.0" text="显示时间"/>
+                <Circle fx:id="comLight" fill="#ff1f1f" layoutX="7.0" layoutY="17.0" radius="6.0" stroke="BLACK"
+                        strokeType="INSIDE"/>
+            </children>
+        </Pane>
+        <HBox layoutX="14.0" layoutY="443.0">
+            <children>
+                <CheckBox fx:id="timedDispatch" mnemonicParsing="false" prefHeight="29.0" prefWidth="87.0"
+                          text="定时发送"/>
+                <HBox>
+                    <children>
+                        <Label styleClass="font14" text="周期"/>
+                        <TextField fx:id="cyclicality" prefHeight="22.0" prefWidth="70.0" text="1000"/>
+                        <Label styleClass="font14" text="ms"/>
+                    </children>
+                </HBox>
+                <Label prefHeight="29.0" prefWidth="75.0" styleClass="addCharacter" text="追加字符:"/>
+                <TextField fx:id="delimiter" prefHeight="35.0" prefWidth="319.0"
+                           promptText="每次消息发送后追加的字符(16进制) 例如: 0D 0A"/>
+            </children>
+        </HBox>
+        <HBox layoutX="14.0" layoutY="474.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="14.0"
+              AnchorPane.rightAnchor="22.0">
+            <children>
+                <HBox prefWidth="360.0" styleClass="hbox">
+                    <children>
+                        <Label prefHeight="32.0" prefWidth="59.0" text="接收:">
+                            <styleClass>
+                                <String fx:value="title"/>
+                            </styleClass>
+                        </Label>
+                        <Label fx:id="receive" onMousePressed="#cleanReceiveNumber" prefHeight="32.0"
+                               prefWidth="300.0"/>
+                    </children>
+                </HBox>
+                <HBox prefHeight="34.0" prefWidth="360.0" styleClass="hbox">
+                    <children>
+                        <Label prefHeight="32.0" prefWidth="59.0" text="发送:">
+                            <styleClass>
+                                <String fx:value="title"/>
+                            </styleClass>
+                        </Label>
+                        <Label fx:id="send" onMousePressed="#cleanSendNumber" prefHeight="32.0" prefWidth="300.0"/>
+                    </children>
+                </HBox>
+            </children>
+        </HBox>
+        <Button layoutX="649.0" layoutY="443.0" mnemonicParsing="false" onAction="#addStage" prefHeight="35.0"
+                prefWidth="87.0" text="新建窗口"/>
+    </children>
+</AnchorPane>

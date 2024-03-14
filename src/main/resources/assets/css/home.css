@@ -1,0 +1,72 @@
+@import "../fonts/fonts.css";
+
+.text {
+    -fx-font-family: "HONOR Sans CN Medium";
+}
+
+.label {
+    -fx-alignment: center;
+}
+
+/*接收到的消息*/
+#receiveMessage {
+    -fx-background-color: black;
+    -fx-text-fill: rgb(0, 255, 0);
+}
+
+#receiveMessage, #sendMessage {
+    -fx-padding: 0;
+}
+
+#cyclicality {
+    -fx-alignment: center;
+}
+
+/* 设置下拉列表中选项的文本居中对齐 */
+.combo-box .list-cell {
+    -fx-alignment: center;
+}
+
+/* 设置选择按钮中的文本居中对齐 */
+.combo-box .list-cell:filled:selected .text {
+    -fx-alignment: center;
+}
+
+.title {
+    -fx-background-color: #FF00008B;
+}
+
+#send, #receive {
+    -fx-background-color: #e7e7e7;
+    -fx-font-size: 18;
+}
+
+#timedDispatch {
+    -fx-padding: 0;
+    -fx-font-size: 14;
+}
+
+.font14 {
+    -fx-pref-height: 35;
+    -fx-font-size: 16;
+}
+
+.addCharacter {
+    -fx-padding: 0;
+    -fx-pref-height: 32;
+}
+
+#cyclicality, #delimiter {
+    -fx-font-family: "HONOR Sans CN Medium";
+    -fx-alignment: center;
+    -fx-padding: 0;
+    -fx-pref-height: 32;
+}
+
+#timedDispatch {
+    -fx-pref-height: 32;
+}
+
+#sendMessage, #receiveMessage {
+    -fx-font-family: "HONOR Sans CN Medium";
+}
