@@ -9,24 +9,68 @@ plugins {
 group = 'com.y'
 version = '1.0.0'
 
-
 repositories {
+    maven {
+        url "https://raw.githubusercontent.com/graalvm/native-build-tools/snapshots"
+    }
     mavenCentral()
 }
+
 javafx {
     version = "21.0.2"
     modules = ["javafx.controls", "javafx.fxml"]
 }
-dependencies {
 
-    // implementation 'com.google.code.gson:gson:2.10.1'
+application {
+    applicationName = "ComToolFX"
+    mainClass = "com.y.comtoolfx.AppLauncher"
+    mainModule = "ComToolFX"
+    applicationDefaultJvmArgs = ["-Dfile.encoding=UTF-8"]
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.fazecast:jSerialComm:2.10.4'
     implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
-
+    implementation 'org.apache.commons:commons-text:1.11.0'
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    //预览编译
+    options.compilerArgs.add("--enable-preview")
+}
+
+shadowJar {
+    archiveFileName = "ComToolFX.jar"
+}
+
+jlink {
+    options.set(List.of("--strip-debug", "--compress", "zip-9", "--no-header-files", "--no-man-pages"))
+    launcher {
+        name = application.applicationName
+        imageName.set(application.applicationName)
+    }
+    imageZip.set(project.file("${project.getLayout().getBuildDirectory().get()}/image-zip/JavaFXSample.zip"))
+    jpackage {
+        outputDir = "build-package"
+        imageName = application.applicationName
+        skipInstaller = false
+        installerName = application.applicationName
+        appVersion = version.toString()
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            icon = "src/main/resources/application.ico"
+            installerOptions += ["--win-dir-chooser", "--win-menu", "--win-shortcut", "--win-menu-group", application.applicationName]
+        }
+        if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
+            icon = "src/main/resources/application.icns"
+        }
+        if (org.gradle.internal.os.OperatingSystem.current().linux) {
+            icon = "src/main/resources/application.png"
+            installerType = "deb"
+            installerOptions += ["--linux-deb-maintainer", "icuxika@outlook.com", "--linux-menu-group", application.applicationName, "--linux-shortcut"]
+        }
+    }
 }

@@ -11,6 +11,7 @@ import java.util.Arrays;
  * @version 1.0
  * @date 2024/3/14 15:18
  */
+
 public class SerialComm implements AutoCloseable {
     protected SerialPort serialPort;
     protected String serialPortName;
@@ -29,36 +30,32 @@ public class SerialComm implements AutoCloseable {
         this.messageDelimiter = messageDelimiter;
         messageListener = new MessageListener(this);
     }
-
     public static SerialPort[] getSerialPorts() {
         return SerialPort.getCommPorts();
     }
-
     /**
      * 更新侦听器
      *
      * @param bytes 字节
      */
     protected void updateListener(byte[] bytes) {
-        messageDelimiter = bytes;
-        messageListener = new MessageListener(this);
-        serialPort.removeDataListener();
-        serialPort.addDataListener(messageListener);
+        if (bytes != null) {
+            messageDelimiter = bytes;
+            messageListener = new MessageListener(this);
+            serialPort.removeDataListener();
+            serialPort.addDataListener(messageListener);
+            //log.debug("更新结束符:{}", Arrays.toString(messageDelimiter));
+        }
     }
-
     protected void listen(byte[] bytes) {
         System.out.println("收到" + Arrays.toString(bytes));
     }
-
     protected String text(byte[] bytes) {
         return new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length));
     }
-
     protected String textAndTime(byte[] bytes) {
-        return new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length)) + " " + "[" + TimeUtils.getNow() + "]";
-
+        return "[" + TimeUtils.getNow() + "]" + new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length));
     }
-
     protected void getSerial() {
         close();
         for (SerialPort serial : getSerialPorts()) {
@@ -69,7 +66,6 @@ public class SerialComm implements AutoCloseable {
         }
         serialPort = null;
     }
-
     protected boolean openPort() {
         getSerial();
         if (serialPort != null) {
@@ -81,18 +77,19 @@ public class SerialComm implements AutoCloseable {
         }
         return open;
     }
-
     protected int write(byte[] bytes) {
+        //log.debug("串口写入:{}", Arrays.toString(bytes));
+        if (bytes == null) {
+            return 0;
+        }
         if (open) {
             return serialPort.writeBytes(bytes, bytes.length);
         }
         return 0;
     }
-
     protected int write(String message) {
         return write(message.getBytes(StandardCharsets.UTF_8));
     }
-
     @Override
     public void close() {
         if (serialPort != null) {
@@ -100,5 +97,4 @@ public class SerialComm implements AutoCloseable {
             serialPort.closePort();
         }
     }
-
 }

@@ -76,9 +76,6 @@
                         <Label styleClass="font14" text="ms"/>
                     </children>
                 </HBox>
-                <Label prefHeight="29.0" prefWidth="75.0" styleClass="addCharacter" text="追加字符:"/>
-                <TextField fx:id="delimiter" prefHeight="35.0" prefWidth="319.0"
-                           promptText="每次消息发送后追加的字符(16进制) 例如: 0D 0A"/>
             </children>
         </HBox>
         <HBox layoutX="14.0" layoutY="474.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="14.0"
@@ -107,7 +104,9 @@
                 </HBox>
             </children>
         </HBox>
-        <Button layoutX="649.0" layoutY="443.0" mnemonicParsing="false" onAction="#addStage" prefHeight="35.0"
+        <Button layoutX="537.0" layoutY="443.0" mnemonicParsing="false" onAction="#addStage" prefHeight="35.0"
                 prefWidth="87.0" text="新建窗口"/>
+        <Button layoutX="650.0" layoutY="443.0" mnemonicParsing="false" onAction="#analogReply" prefHeight="35.0"
+                prefWidth="87.0" text="模拟回复"/>
     </children>
 </AnchorPane>

@@ -2,8 +2,8 @@ package com.y.comtoolfx.controller;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.y.comtoolfx.AppLauncher;
+import com.y.comtoolfx.serialComm.AnalogDevice;
 import com.y.comtoolfx.serialComm.SerialComm;
-import com.y.comtoolfx.tools.DataHandler;
 import com.y.comtoolfx.tools.fxtools.FX;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -16,7 +16,14 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
+import org.apache.commons.text.StringEscapeUtils;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 家
@@ -25,12 +32,16 @@ import javafx.util.Duration;
  * @version 1.0
  * @date 2024/3/14 15:43
  */
+
 public class Home extends SerialComm {
+    //文件选择器
+    public static final FileChooser FILE_CHOOSER = new FileChooser();
     private final SimpleLongProperty SEND_LONG_PROPERTY = new SimpleLongProperty(0);
     private final SimpleLongProperty RECEIVE_LONG_PROPERTY = new SimpleLongProperty(0);
     private final SimpleBooleanProperty openSerial = new SimpleBooleanProperty(false);
     private final Timeline cyclicalitySendBytes = new Timeline();
     private volatile byte[] cyclicalityBytes;
+    private Map<String, byte[]> replys = new HashMap<>();
     /**
      * 串口名称选取器
      */
@@ -61,13 +72,6 @@ public class Home extends SerialComm {
      */
     @FXML
     private ComboBox<String> flowControlPicker;
-
-
-    /**
-     * 分隔符
-     */
-    @FXML
-    private TextField delimiter;
     /**
      * 串口打开标识
      */
@@ -97,6 +101,24 @@ public class Home extends SerialComm {
     private CheckBox showTime;
     @FXML
     private CheckBox timedDispatch;
+    //时间
+    private volatile long waitTime = 1000;
+
+    private byte[] getReply(byte[] bytes) {
+        String key = new String(bytes);
+        return (replys == null) ? null : replys.get(key);
+    }
+
+    @FXML
+    void analogReply(ActionEvent event) {
+        File file = FILE_CHOOSER.showOpenDialog(sendMessage.getScene().getWindow());
+        if (file != null) {
+            replys = AnalogDevice.config(file);
+            if (replys != null) {
+                updateListener(replys.get("消息分隔符"));
+            }
+        }
+    }
 
     @FXML
     void addStage(ActionEvent event) {
@@ -131,13 +153,24 @@ public class Home extends SerialComm {
     @Override
     protected void listen(byte[] bytes) {
         if (bytes.length > 0) {
+            if (receiveShow.isSelected()) {
+                if (showTime.isSelected()) {
+                    FX.run(() -> receiveMessage.appendText(textAndTime(bytes) + "\n"));
+                } else {
+                    FX.run(() -> receiveMessage.appendText(text(bytes) + "\n"));
+                }
+            }
             FX.run(() -> RECEIVE_LONG_PROPERTY.set(RECEIVE_LONG_PROPERTY.getValue() + bytes.length));
-        }
-        if (receiveShow.isSelected()) {
-            if (showTime.isSelected()) {
-                FX.run(() -> receiveMessage.appendText(textAndTime(bytes) + "\n"));
-            } else {
-                FX.run(() -> receiveMessage.appendText(text(bytes) + "\n"));
+            //返回数据
+            byte[] reply = getReply(bytes);
+            if (reply != null) {
+                try {
+                    System.out.println("休眠" + waitTime);
+                    Thread.sleep(this.waitTime);
+                } catch (InterruptedException e) {
+                    System.out.println("睡眠失败");
+                }
+                addSendNumber(write(reply));
             }
         }
     }
@@ -148,16 +181,17 @@ public class Home extends SerialComm {
         cyclicalitySendBytes.stop();
     }
 
+    /**
+     * @param number 数
+     */
     private void addSendNumber(int number) {
         if (number > 0) {
-            SEND_LONG_PROPERTY.set(SEND_LONG_PROPERTY.getValue() + number);
+            FX.run(() -> SEND_LONG_PROPERTY.set(SEND_LONG_PROPERTY.getValue() + number));
         }
     }
 
     private void write() {
-        String messageText = sendMessage.getText();
-        String delimiterText = delimiter.getText();
-        addSendNumber(write(DataHandler.getByte(messageText, delimiterText)));
+        addSendNumber(write(StringEscapeUtils.unescapeJava(sendMessage.getText()).getBytes(StandardCharsets.UTF_8)));
     }
 
     private void onActionOpenSerialPort() {
@@ -191,6 +225,11 @@ public class Home extends SerialComm {
         addListener();
         initParameters();
         open();
+
+        FILE_CHOOSER.setTitle("选择json文件");
+        FILE_CHOOSER.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("json文件 (*.json)", "*.json")
+        );
     }
 
     private void addListener() {
@@ -242,22 +281,29 @@ public class Home extends SerialComm {
             };
             open();
         });
+
+        //实时更新延迟
+        cyclicality.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                waitTime = Integer.parseInt(newValue);
+                if (waitTime < 1) {
+                    waitTime = 1;
+                }
+            } catch (NumberFormatException e) {
+                cyclicality.setText(oldValue);
+            }
+            System.out.println("waitTime: = " + waitTime);
+        });
+
         timedDispatch.selectedProperty().addListener((observable, oldValue, newValue) -> {
             //开始
             if (newValue) {
-                int value = 1000;
-                try {
-                    value = Integer.parseInt(cyclicality.getText().trim());
-                } catch (NumberFormatException e) {
-                    //throw new RuntimeException(e);
-                }
-                cyclicality.setText(String.valueOf(value));
                 //获取发送的数组
-                cyclicalityBytes = DataHandler.getByte(sendMessage.getText(), delimiter.getText());
+                cyclicalityBytes = StringEscapeUtils.unescapeJava(sendMessage.getText()).getBytes(StandardCharsets.UTF_8);
                 //清理帧
                 cyclicalitySendBytes.getKeyFrames().clear();
                 //添加帧
-                cyclicalitySendBytes.getKeyFrames().add(new KeyFrame(Duration.millis(value), s -> addSendNumber(write(cyclicalityBytes))));
+                cyclicalitySendBytes.getKeyFrames().add(new KeyFrame(Duration.millis(waitTime), s -> addSendNumber(write(cyclicalityBytes))));
                 //开始发送
                 cyclicalitySendBytes.play();
             } else {
@@ -267,10 +313,8 @@ public class Home extends SerialComm {
         });
         receiveMessage.textProperty().addListener((observable, oldValue, newValue) -> receiveMessage.setScrollTop(Double.MAX_VALUE));
 
-
         //更新数据
-        sendMessage.textProperty().addListener((observable, oldValue, newValue) -> cyclicalityBytes = DataHandler.getByte(newValue, delimiter.getText()));
-        delimiter.textProperty().addListener((observable, oldValue, newValue) -> cyclicalityBytes = DataHandler.getByte(sendMessage.getText(), newValue));
+        sendMessage.textProperty().addListener((observable, oldValue, newValue) -> cyclicalityBytes = StringEscapeUtils.unescapeJava(newValue).getBytes(StandardCharsets.UTF_8));
     }
 
     public void updateSerialNumberList() {
