@@ -2,9 +2,9 @@ package com.y.comtoolfx.serialComm;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.y.comtoolfx.tools.TimeUtils;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import com.y.comtoolfx.tools.fxtools.FX;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
 
 /**
  * @author Y
@@ -13,6 +13,12 @@ import java.util.Arrays;
  */
 
 public class SerialComm implements AutoCloseable {
+    //发送的数据量
+    protected final SimpleLongProperty SEND_LONG_PROPERTY = new SimpleLongProperty(0);
+    //接收的数据量
+    protected final SimpleLongProperty RECEIVE_LONG_PROPERTY = new SimpleLongProperty(0);
+    //串口打开关闭
+    protected final SimpleBooleanProperty openSerial = new SimpleBooleanProperty(false);
     protected SerialPort serialPort;
     protected String serialPortName;
     protected int baudRate = 9600;
@@ -23,40 +29,47 @@ public class SerialComm implements AutoCloseable {
     protected MessageListener messageListener;
     protected byte[] messageDelimiter = new byte[0];
     protected volatile boolean open = false;
+
     protected SerialComm() {
         messageListener = new MessageListener(this);
     }
+
     protected SerialComm(byte[] messageDelimiter) {
         this.messageDelimiter = messageDelimiter;
         messageListener = new MessageListener(this);
     }
+
     public static SerialPort[] getSerialPorts() {
         return SerialPort.getCommPorts();
     }
+
     /**
      * 更新侦听器
      *
      * @param bytes 字节
      */
-    protected void updateListener(byte[] bytes) {
+    protected final void updateListener(byte[] bytes) {
         if (bytes != null) {
             messageDelimiter = bytes;
             messageListener = new MessageListener(this);
             serialPort.removeDataListener();
             serialPort.addDataListener(messageListener);
-            //log.debug("更新结束符:{}", Arrays.toString(messageDelimiter));
         }
     }
+
     protected void listen(byte[] bytes) {
-        System.out.println("收到" + Arrays.toString(bytes));
+        FX.run(() -> RECEIVE_LONG_PROPERTY.set(RECEIVE_LONG_PROPERTY.get() + bytes.length));
     }
-    protected String text(byte[] bytes) {
+
+    protected final String text(byte[] bytes) {
         return new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length));
     }
-    protected String textAndTime(byte[] bytes) {
+
+    protected final String textAndTime(byte[] bytes) {
         return "[" + TimeUtils.getNow() + "]" + new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length));
     }
-    protected void getSerial() {
+
+    protected final void getSerial() {
         close();
         for (SerialPort serial : getSerialPorts()) {
             if (serial.getSystemPortName().equals(serialPortName)) {
@@ -66,7 +79,11 @@ public class SerialComm implements AutoCloseable {
         }
         serialPort = null;
     }
-    protected boolean openPort() {
+
+    /**
+     * 打开串行端口
+     */
+    protected final void openSerialPort() {
         getSerial();
         if (serialPort != null) {
             serialPort.setComPortParameters(baudRate, dataBits, stopBits, parity);
@@ -74,27 +91,26 @@ public class SerialComm implements AutoCloseable {
             serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 100, 100);
             serialPort.addDataListener(messageListener);
             open = serialPort.openPort();
+            FX.run(() -> openSerial.set(open));
         }
-        return open;
     }
-    protected int write(byte[] bytes) {
-        //log.debug("串口写入:{}", Arrays.toString(bytes));
-        if (bytes == null) {
-            return 0;
+
+    protected final void write(byte[] bytes) {
+        if (open && bytes.length > 0) {
+            int i = serialPort.writeBytes(bytes, bytes.length);
+            if (i > 1) {
+                FX.run(() -> SEND_LONG_PROPERTY.set(SEND_LONG_PROPERTY.get() + i));
+            }
         }
-        if (open) {
-            return serialPort.writeBytes(bytes, bytes.length);
-        }
-        return 0;
     }
-    protected int write(String message) {
-        return write(message.getBytes(StandardCharsets.UTF_8));
-    }
+
     @Override
     public void close() {
         if (serialPort != null) {
             serialPort.removeDataListener();
             serialPort.closePort();
         }
+        open = false;
+        FX.run(() -> openSerial.set(open));
     }
 }

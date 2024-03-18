@@ -40,7 +40,7 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     //预览编译
-    options.compilerArgs.add("--enable-preview")
+    // options.compilerArgs.add("--enable-preview")
 }
 
 shadowJar {
@@ -55,7 +55,7 @@ jlink {
     }
     imageZip.set(project.file("${project.getLayout().getBuildDirectory().get()}/image-zip/JavaFXSample.zip"))
     jpackage {
-        outputDir = "build-package"
+        outputDir = "exe"
         imageName = application.applicationName
         skipInstaller = false
         installerName = application.applicationName

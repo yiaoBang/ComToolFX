@@ -33,7 +33,7 @@ public class AppLauncher extends Application {
         stage.show();
         Home home = loader.getController();
         //窗口关闭清理串口
-        stage.setOnCloseRequest(_ -> home.close());
+        stage.setOnCloseRequest(e -> home.close());
         return stage;
     }
 

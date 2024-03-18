@@ -45,8 +45,8 @@
         </HBox>
         <TextArea fx:id="sendMessage" layoutX="14.0" layoutY="363.0" prefHeight="78.0" prefWidth="489.0"
                   wrapText="true"/>
-        <TextArea fx:id="receiveMessage" layoutX="14.0" layoutY="11.0" prefHeight="325.0" prefWidth="489.0"
-                  wrapText="true"/>
+        <TextArea fx:id="receiveMessage" editable="false" layoutX="14.0" layoutY="11.0" prefHeight="325.0"
+                  prefWidth="489.0" wrapText="true"/>
         <Pane layoutX="537.0" layoutY="300.0" prefHeight="141.0" prefWidth="197.0">
             <children>
                 <Button fx:id="openSerialPort" layoutY="1.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="87.0"
@@ -72,7 +72,7 @@
                 <HBox>
                     <children>
                         <Label styleClass="font14" text="周期"/>
-                        <TextField fx:id="cyclicality" prefHeight="22.0" prefWidth="70.0" text="1000"/>
+                        <TextField fx:id="cyclical" prefHeight="22.0" prefWidth="70.0" text="1000"/>
                         <Label styleClass="font14" text="ms"/>
                     </children>
                 </HBox>
@@ -81,6 +81,16 @@
         <HBox layoutX="14.0" layoutY="474.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="14.0"
               AnchorPane.rightAnchor="22.0">
             <children>
+                <HBox prefHeight="34.0" prefWidth="360.0" styleClass="hbox">
+                    <children>
+                        <Label prefHeight="32.0" prefWidth="59.0" text="发送:">
+                            <styleClass>
+                                <String fx:value="title"/>
+                            </styleClass>
+                        </Label>
+                        <Label fx:id="send" onMousePressed="#cleanSendNumber" prefHeight="32.0" prefWidth="300.0"/>
+                    </children>
+                </HBox>
                 <HBox prefWidth="360.0" styleClass="hbox">
                     <children>
                         <Label prefHeight="32.0" prefWidth="59.0" text="接收:">
@@ -90,16 +100,6 @@
                         </Label>
                         <Label fx:id="receive" onMousePressed="#cleanReceiveNumber" prefHeight="32.0"
                                prefWidth="300.0"/>
-                    </children>
-                </HBox>
-                <HBox prefHeight="34.0" prefWidth="360.0" styleClass="hbox">
-                    <children>
-                        <Label prefHeight="32.0" prefWidth="59.0" text="发送:">
-                            <styleClass>
-                                <String fx:value="title"/>
-                            </styleClass>
-                        </Label>
-                        <Label fx:id="send" onMousePressed="#cleanSendNumber" prefHeight="32.0" prefWidth="300.0"/>
                     </children>
                 </HBox>
             </children>
