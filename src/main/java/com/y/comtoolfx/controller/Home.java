@@ -12,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
@@ -45,6 +46,8 @@ public class Home extends SerialComm {
      * 周期性发送字节时间线
      */
     private final Timeline cyclicalitySendBytesTimeLine = new Timeline();
+    @FXML
+    private AnchorPane root;
     /**
      * 循环性字节
      */
@@ -124,17 +127,6 @@ public class Home extends SerialComm {
     private CheckBox timedDispatch;
     //时间
     private volatile long waitTime = 1000;
-
-    /**
-     * 获得回复
-     *
-     * @param bytes 字节
-     * @return {@code byte[]}
-     */
-    private byte[] getReply(byte[] bytes) {
-        String key = new String(bytes);
-        return (replays == null) ? null : replays.get(key);
-    }
 
     /**
      * 模拟应答(选择json文件)
@@ -218,8 +210,8 @@ public class Home extends SerialComm {
         if (receiveShow.isSelected()) {
             FX.run(() -> receiveMessage.appendText(showTime.isSelected() ? textAndTime(bytes) + "\n" : text(bytes) + "\n"));
         }
-        //返回数据
-        byte[] reply = getReply(bytes);
+        //查询是否有需要回复的数据
+        byte[] reply = (replays == null) ? null : replays.get(new String(bytes));
         if (reply != null) {
             new Thread(() -> {
                 try {
@@ -374,7 +366,7 @@ public class Home extends SerialComm {
             }
         }
         if (!b) {
-            if (!serialNumbers.isEmpty()) serialPortNamePicker.setValue(serialNumbers.getFirst());
+            if (!serialNumbers.isEmpty()) serialPortNamePicker.setValue(serialNumbers.get(0));
             else serialPortNamePicker.setValue("");
         }
     }
@@ -393,7 +385,7 @@ public class Home extends SerialComm {
         //流控
         flowControlPicker.getItems().addAll("无", "RTS/CTS", "DSR/DTR", "ON/OFF");
         if (!serialPortNamePicker.getItems().isEmpty()) {
-            serialPortNamePicker.setValue(serialPortNamePicker.getItems().getFirst());
+            serialPortNamePicker.setValue(serialPortNamePicker.getItems().get(0));
         }
         baudRatePicker.setValue(9600);
         dataBitsPicker.setValue(8);

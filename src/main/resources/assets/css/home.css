@@ -56,7 +56,7 @@
     -fx-pref-height: 32;
 }
 
-#cyclicality, #delimiter {
+#cyclical, #delimiter {
     -fx-font-family: "HONOR Sans CN Medium";
     -fx-alignment: center;
     -fx-padding: 0;
