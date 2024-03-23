@@ -13,12 +13,21 @@ import javafx.beans.property.SimpleLongProperty;
  */
 
 public class SerialComm implements AutoCloseable {
+    /**
+     * 发送保存
+     */
+    protected volatile boolean sendSave;
     //发送的数据量
     protected final SimpleLongProperty SEND_LONG_PROPERTY = new SimpleLongProperty(0);
     //接收的数据量
     protected final SimpleLongProperty RECEIVE_LONG_PROPERTY = new SimpleLongProperty(0);
     //串口打开关闭
     protected final SimpleBooleanProperty openSerial = new SimpleBooleanProperty(false);
+    /**
+     * 接收保存
+     */
+    protected volatile boolean receiveSave;
+    private DataWriteFile dataWriteFile;
     protected SerialPort serialPort;
     protected String serialPortName;
     protected int baudRate = 9600;
@@ -57,10 +66,6 @@ public class SerialComm implements AutoCloseable {
         }
     }
 
-    protected void listen(byte[] bytes) {
-        FX.run(() -> RECEIVE_LONG_PROPERTY.set(RECEIVE_LONG_PROPERTY.get() + bytes.length));
-    }
-
     protected final String text(byte[] bytes) {
         return new String(bytes, 0, bytes.length - (messageDelimiter == null ? 0 : messageDelimiter.length));
     }
@@ -90,7 +95,9 @@ public class SerialComm implements AutoCloseable {
             serialPort.setFlowControl(flowControl);
             serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 100, 100);
             serialPort.addDataListener(messageListener);
-            open = serialPort.openPort();
+            boolean b = serialPort.openPort();
+            dataWriteFile = b ? new DataWriteFile(serialPortName) : null;
+            open = b;
             FX.run(() -> openSerial.set(open));
         }
     }
@@ -100,8 +107,16 @@ public class SerialComm implements AutoCloseable {
             int i = serialPort.writeBytes(bytes, bytes.length);
             if (i > 1) {
                 FX.run(() -> SEND_LONG_PROPERTY.set(SEND_LONG_PROPERTY.get() + i));
+                if (sendSave)
+                    Thread.startVirtualThread(() -> dataWriteFile.write(bytes));
             }
         }
+    }
+
+    protected void listen(byte[] bytes) {
+        FX.run(() -> RECEIVE_LONG_PROPERTY.set(RECEIVE_LONG_PROPERTY.get() + bytes.length));
+        if (receiveSave)
+            Thread.startVirtualThread(() -> dataWriteFile.read(bytes));
     }
 
     @Override

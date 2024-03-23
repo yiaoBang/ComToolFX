@@ -30,6 +30,7 @@ application {
 }
 
 dependencies {
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.fazecast:jSerialComm:2.10.4'
     implementation 'io.github.mkpaz:atlantafx-base:2.0.1'

@@ -10,6 +10,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.stage.Stage;
 
+import java.io.File;
+
 /**
  * @author Y
  * @version 1.0
@@ -17,10 +19,15 @@ import javafx.stage.Stage;
  */
 public class AppLauncher extends Application {
     private static JavaFXBuilderFactory javaFXBuilderFactory;
+    public static final File startFile;
 
+    static {
+        startFile = new File(System.getProperty("java.home")).getParentFile();
+    }
     public static void main(String[] args) {
         System.setProperty("prism.lcdtext", "false");
         System.setProperty("prism.allowhidpi", "false");
+
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             System.out.println("捕捉到未处理的异常：" + e.getMessage());
             // 抛出栈信息
@@ -54,7 +61,7 @@ public class AppLauncher extends Application {
         stage.setScene(FX.scene("Home"));
         stage.setTitle("ComToolFX(主窗口)");
         stage.getIcons().add(FX.image("application.png"));
-        //stage.setResizable(false);
+        stage.setResizable(false);
         stage.show();
     }
 

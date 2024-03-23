@@ -23,6 +23,8 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 家
@@ -33,14 +35,16 @@ import java.util.Map;
  */
 
 public class Home extends SerialComm {
+
     //文件选择器
     public static final FileChooser FILE_CHOOSER = new FileChooser();
-    public static final File startFile;
 
-    static {
-        String runtime = System.getProperty("java.home");
-        startFile = new File(runtime).getParentFile();
-    }
+    // 设置消息的最大数量
+    private static final int MAX_MESSAGES = 20;
+    private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
+    private final StringBuilder stringBuilder = new StringBuilder();
+    @FXML
+    private CheckBox isReceive;
 
     /**
      * 周期性发送字节时间线
@@ -203,13 +207,17 @@ public class Home extends SerialComm {
     void sendData(ActionEvent event) {
         write();
     }
+    @FXML
+    private CheckBox isSend;
 
     @Override
     protected void listen(byte[] bytes) {
         super.listen(bytes);
-        if (receiveShow.isSelected()) {
-            FX.run(() -> receiveMessage.appendText(showTime.isSelected() ? textAndTime(bytes) + "\n" : text(bytes) + "\n"));
-        }
+        updateReceiveMessage(bytes);
+        replyData(bytes);
+    }
+
+    private void replyData(byte[] bytes) {
         //查询是否有需要回复的数据
         byte[] reply = (replays == null) ? null : replays.get(new String(bytes));
         if (reply != null) {
@@ -220,6 +228,22 @@ public class Home extends SerialComm {
                 }
                 write(reply);
             }).start();
+        }
+    }
+
+    private void updateReceiveMessage(byte[] bytes) {
+        if (receiveShow.isSelected()) {
+            String message = showTime.isSelected() ? textAndTime(bytes) : text(bytes);
+            messageQueue.add(message);
+            if (messageQueue.size() > MAX_MESSAGES) {
+                messageQueue.poll();
+            }
+            FX.run(() -> {
+                messageQueue.forEach(m -> stringBuilder.append(m).append("\n"));
+                receiveMessage.setText(stringBuilder.toString());
+                receiveMessage.setScrollTop(Double.MAX_VALUE);
+                stringBuilder.setLength(0);
+            });
         }
     }
 
@@ -246,6 +270,11 @@ public class Home extends SerialComm {
     void initialize() {
         cyclicalitySendBytesTimeLine.setCycleCount(Timeline.INDEFINITE);
 
+        //是否保存在文件中
+        isReceive.selectedProperty().addListener((observable, oldValue, newValue) -> receiveSave = newValue);
+        isSend.selectedProperty().addListener((observable, oldValue, newValue) -> sendSave = newValue);
+
+
         //串口按钮绑定
         openSerialPort.textProperty().bind(openSerial.map(b -> b ? "关闭串口" : "打开串口"));
         //串口点击事件
@@ -261,7 +290,7 @@ public class Home extends SerialComm {
         initParameters();
         openSerialPort();
         FILE_CHOOSER.setTitle("选择json文件");
-        FILE_CHOOSER.setInitialDirectory(startFile);
+        FILE_CHOOSER.setInitialDirectory(AppLauncher.startFile);
         FILE_CHOOSER.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("json文件 (*.json)", "*.json")
         );
@@ -346,6 +375,7 @@ public class Home extends SerialComm {
                 cyclicalitySendBytesTimeLine.stop();
             }
         });
+
         receiveMessage.textProperty().addListener((observable, oldValue, newValue) -> receiveMessage.setScrollTop(Double.MAX_VALUE));
 
         //更新数据
