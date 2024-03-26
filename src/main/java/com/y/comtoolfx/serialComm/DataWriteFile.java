@@ -1,6 +1,7 @@
 package com.y.comtoolfx.serialComm;
 
 import com.y.comtoolfx.AppLauncher;
+import com.y.comtoolfx.tools.TimeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +33,8 @@ public class DataWriteFile {
     }
 
     public DataWriteFile(String serialPortName) {
-        File read = new File(dataFile, serialPortName + "-readData.txt");
-        File write = new File(dataFile, serialPortName + "-writeData.txt");
+        File read = new File(dataFile, serialPortName + "-Read" + TimeUtils.getFileName() + ".txt");
+        File write = new File(dataFile, serialPortName + "-Write" + TimeUtils.getFileName() + ".txt");
         read.delete();
         write.delete();
         readFile = read.toPath();

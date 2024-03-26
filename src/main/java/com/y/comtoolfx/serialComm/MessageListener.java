@@ -40,6 +40,6 @@ public class MessageListener implements SerialPortMessageListenerWithExceptions 
 
     @Override
     public void serialEvent(SerialPortEvent event) {
-        new Thread(() -> serialComm.listen(event.getReceivedData())).start();
+        serialComm.listen(event.getReceivedData());
     }
 }

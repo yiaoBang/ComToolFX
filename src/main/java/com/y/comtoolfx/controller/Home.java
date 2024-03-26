@@ -40,7 +40,7 @@ public class Home extends SerialComm {
     public static final FileChooser FILE_CHOOSER = new FileChooser();
 
     // 设置消息的最大数量
-    private static final int MAX_MESSAGES = 20;
+    private static final int MAX_MESSAGES = 100;
     private final Queue<String> messageQueue = new ConcurrentLinkedQueue<>();
     private final StringBuilder stringBuilder = new StringBuilder();
     @FXML
@@ -166,6 +166,7 @@ public class Home extends SerialComm {
     @FXML
     void cleanReceive(ActionEvent event) {
         receiveMessage.clear();
+        messageQueue.clear();
     }
 
     /**
@@ -207,8 +208,24 @@ public class Home extends SerialComm {
     void sendData(ActionEvent event) {
         write();
     }
+
     @FXML
     private CheckBox isSend;
+
+    @Override
+    protected void write(byte[] bytes) {
+        if (open && bytes.length > 0) {
+            int i = serialPort.writeBytes(bytes, bytes.length);
+            if (i > 1) {
+                FX.run(() -> SEND_LONG_PROPERTY.set(SEND_LONG_PROPERTY.get() + i));
+                if (sendSave)
+                    Thread.startVirtualThread(() -> dataWriteFile.write(bytes));
+            } else {
+                close();
+                FX.run(this::updateSerialNumberList);
+            }
+        }
+    }
 
     @Override
     protected void listen(byte[] bytes) {
@@ -218,17 +235,17 @@ public class Home extends SerialComm {
     }
 
     private void replyData(byte[] bytes) {
-        //查询是否有需要回复的数据
-        byte[] reply = (replays == null) ? null : replays.get(new String(bytes));
-        if (reply != null) {
-            new Thread(() -> {
+        Thread.startVirtualThread(() -> {
+            //查询是否有需要回复的数据
+            byte[] reply = (replays == null) ? null : replays.get(new String(bytes));
+            if (reply != null) {
                 try {
                     Thread.sleep(this.waitTime);
                 } catch (InterruptedException ignored) {
                 }
                 write(reply);
-            }).start();
-        }
+            }
+        });
     }
 
     private void updateReceiveMessage(byte[] bytes) {
@@ -288,7 +305,6 @@ public class Home extends SerialComm {
         receive.textProperty().bind(RECEIVE_LONG_PROPERTY.asString());
         addListener();
         initParameters();
-        openSerialPort();
         FILE_CHOOSER.setTitle("选择json文件");
         FILE_CHOOSER.setInitialDirectory(AppLauncher.startFile);
         FILE_CHOOSER.getExtensionFilters().addAll(
@@ -396,9 +412,12 @@ public class Home extends SerialComm {
             }
         }
         if (!b) {
-            if (!serialNumbers.isEmpty()) serialPortNamePicker.setValue(serialNumbers.get(0));
-            else serialPortNamePicker.setValue("");
+            if (!serialNumbers.isEmpty())
+                serialPortNamePicker.setValue(serialNumbers.get(0));
+            else
+                serialPortNamePicker.setValue("");
         }
+        openSerialPort();
     }
 
     private void initParameters() {

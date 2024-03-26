@@ -24,10 +24,10 @@ public class AppLauncher extends Application {
     static {
         startFile = new File(System.getProperty("java.home")).getParentFile();
     }
+
     public static void main(String[] args) {
         System.setProperty("prism.lcdtext", "false");
         System.setProperty("prism.allowhidpi", "false");
-
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             System.out.println("捕捉到未处理的异常：" + e.getMessage());
             // 抛出栈信息

@@ -27,7 +27,7 @@ public class SerialComm implements AutoCloseable {
      * 接收保存
      */
     protected volatile boolean receiveSave;
-    private DataWriteFile dataWriteFile;
+    protected DataWriteFile dataWriteFile;
     protected SerialPort serialPort;
     protected String serialPortName;
     protected int baudRate = 9600;
@@ -102,7 +102,7 @@ public class SerialComm implements AutoCloseable {
         }
     }
 
-    protected final void write(byte[] bytes) {
+    protected void write(byte[] bytes) {
         if (open && bytes.length > 0) {
             int i = serialPort.writeBytes(bytes, bytes.length);
             if (i > 1) {
@@ -122,10 +122,10 @@ public class SerialComm implements AutoCloseable {
     @Override
     public void close() {
         if (serialPort != null) {
-            serialPort.removeDataListener();
-            serialPort.closePort();
+            open = !serialPort.closePort();
+        } else {
+            open = false;
         }
-        open = false;
         FX.run(() -> openSerial.set(open));
     }
 }
